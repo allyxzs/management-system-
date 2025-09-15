@@ -3,78 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gerenciamento Financeiro</title>
+    <title>Finanças | Sistema de Gerenciamento Financeiro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            min-height: 100vh;
         }
-        .container {
-            max-width: 800px;
-        }
+        
         .card {
             background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .btn {
-            transition: background-color 0.2s;
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-        .btn:hover {
-            opacity: 0.9;
+        
+        .btn-primary {
+            background-color: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        .transaction-entrada {
+            border-left: 4px solid var(--success);
+        }
+        
+        .transaction-saida {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e5e7eb;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Responsividade aprimorada */
+        @media (max-width: 768px) {
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="min-h-screen p-4 md:p-6">
 
-    <div class="container mx-auto p-6 space-y-8">
-        <!-- Header e Saldo -->
-        <div class="card p-6 text-center">
-            <h1 class="text-3xl font-bold text-gray-800">Sistema de Gerenciamento Financeiro</h1>
-            <p class="text-gray-600 mt-2">Protótipo para PCCT</p>
-            <div class="mt-6 p-4 bg-purple-100 rounded-lg shadow-inner">
-                <p class="text-lg font-semibold text-gray-700">Saldo Atual:</p>
-                <p id="saldo" class="text-4xl font-extrabold text-purple-700 mt-2">R$ 0,00</p>
+    <div class="container mx-auto max-w-6xl space-y-8">
+        <!-- Header e Dashboard -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-wallet text-indigo-600 mr-3"></i>Controle Financeiro</h1>
+                <p class="text-gray-600 mt-2">Gerencie suas finanças de forma simples e eficiente</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm py-2 px-4">
+                <p class="text-sm text-gray-500">Saldo atual</p>
+                <p id="saldo" class="text-3xl font-bold text-indigo-700">R$ 0,00</p>
             </div>
         </div>
 
-        <!-- Formulário de Registro -->
-        <div class="card p-6">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Adicionar Novo Registro</h2>
-            <form id="registro-form" class="space-y-4">
-                <div>
-                    <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                    <input type="text" id="descricao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-2" required>
+        <!-- Dashboard de Estatísticas -->
+        <div class="dashboard-stats">
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <div class="rounded-full bg-green-100 p-4 mb-3">
+                    <i class="fas fa-arrow-down text-green-600 text-2xl"></i>
                 </div>
-                <div>
-                    <label for="valor" class="block text-sm font-medium text-gray-700">Valor</label>
-                    <input type="number" id="valor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-2" step="0.01" required>
+                <h3 class="text-lg font-semibold text-gray-700">Total de Entradas</h3>
+                <p id="total-entradas" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
+            </div>
+            
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <div class="rounded-full bg-red-100 p-4 mb-3">
+                    <i class="fas fa-arrow-up text-red-600 text-2xl"></i>
                 </div>
-                <div>
-                    <label for="tipo" class="block text-sm font-medium text-gray-700">Tipo</label>
-                    <select id="tipo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 p-2" required>
-                        <option value="entrada">Entrada</option>
-                        <option value="saida">Saída</option>
-                    </select>
+                <h3 class="text-lg font-semibold text-gray-700">Total de Saídas</h3>
+                <p id="total-saidas" class="text-3xl font-bold text-red-600 mt-2">R$ 0,00</p>
+            </div>
+            
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <div class="rounded-full bg-blue-100 p-4 mb-3">
+                    <i class="fas fa-chart-pie text-blue-600 text-2xl"></i>
                 </div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 btn">
-                    Adicionar Registro
-                </button>
-            </form>
+                <h3 class="text-lg font-semibold text-gray-700">Balanço Mensal</h3>
+                <p id="balanco-mensal" class="text-3xl font-bold text-blue-600 mt-2">R$ 0,00</p>
+            </div>
         </div>
 
-        <!-- Tabela de Registros -->
+        <!-- Gráfico e Formulário -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Gráfico -->
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-chart-bar text-indigo-600 mr-2"></i>Visão Geral</h2>
+                <div class="h-80">
+                    <canvas id="finance-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Formulário de Registro -->
+            <div class="card p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4"><i class="fas fa-plus-circle text-indigo-600 mr-2"></i>Novo Registro</h2>
+                <form id="registro-form" class="space-y-4">
+                    <div>
+                        <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                        <input type="text" id="descricao" placeholder="Ex: Salário, Aluguel, Supermercado" 
+                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="valor" class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                            <input type="number" id="valor" placeholder="0,00" step="0.01" min="0.01" 
+                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" required>
+                        </div>
+                        
+                        <div>
+                            <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                            <select id="categoria" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border">
+                                <option value="Outros">Outros</option>
+                                <option value="Salário">Salário</option>
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Moradia">Moradia</option>
+                                <option value="Educação">Educação</option>
+                                <option value="Saúde">Saúde</option>
+                                <option value="Lazer">Lazer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="data" class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                            <input type="date" id="data" 
+                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" required>
+                        </div>
+                        
+                        <div>
+                            <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                            <select id="tipo" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border" required>
+                                <option value="entrada">Entrada</option>
+                                <option value="saida">Saída</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full btn-primary py-3 px-4 rounded-lg text-white font-semibold shadow-md">
+                        <i class="fas fa-plus-circle mr-2"></i>Adicionar Registro
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filtros e Tabela de Registros -->
         <div class="card p-6">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Registros</h2>
-            <div class="overflow-x-auto rounded-lg shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-xl font-semibold text-gray-800"><i class="fas fa-list-alt text-indigo-600 mr-2"></i>Registros Financeiros</h2>
+                
+                <div class="flex flex-wrap gap-2">
+                    <select id="filtro-tipo" class="rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <option value="todos">Todos</option>
+                        <option value="entrada">Entradas</option>
+                        <option value="saida">Saídas</option>
+                    </select>
+                    
+                    <select id="filtro-categoria" class="rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                        <option value="todos">Todas categorias</option>
+                        <option value="Salário">Salário</option>
+                        <option value="Alimentação">Alimentação</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Moradia">Moradia</option>
+                        <option value="Educação">Educação</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Lazer">Lazer</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    
+                    <button id="btn-ordenar" class="bg-gray-100 hover:bg-gray-200 rounded-lg p-2 transition-colors">
+                        <i class="fas fa-sort-amount-down-alt text-gray-700"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto rounded-lg shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="registros-tabela" class="bg-white divide-y divide-gray-200">
@@ -82,61 +271,366 @@
                     </tbody>
                 </table>
             </div>
+            
+            <div id="sem-registros" class="text-center py-12 text-gray-500">
+                <i class="fas fa-receipt text-4xl mb-3"></i>
+                <p>Nenhum registro encontrado. Adicione sua primeira transação!</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center text-gray-500 text-sm py-6">
+            <p>Sistema de Gerenciamento Financeiro &copy; 2023</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Elementos do DOM
             const form = document.getElementById('registro-form');
             const tabela = document.getElementById('registros-tabela');
             const saldoElement = document.getElementById('saldo');
-
+            const totalEntradasElement = document.getElementById('total-entradas');
+            const totalSaidasElement = document.getElementById('total-saidas');
+            const balancoMensalElement = document.getElementById('balanco-mensal');
+            const semRegistrosElement = document.getElementById('sem-registros');
+            const filtroTipo = document.getElementById('filtro-tipo');
+            const filtroCategoria = document.getElementById('filtro-categoria');
+            const btnOrdenar = document.getElementById('btn-ordenar');
+            
+            // Variáveis de estado
             let saldoAtual = 0;
-
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+            let registros = [];
+            let ordenacaoCrescente = true;
+            let chart; // Para o gráfico
+            
+            // Inicializar a data atual no campo de data
+            document.getElementById('data').valueAsDate = new Date();
+            
+            // Formatação de moeda
             const formatarMoeda = (valor) => {
                 return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             };
-
-            const atualizarSaldo = () => {
+            
+            // Carregar dados do localStorage
+            const carregarDados = () => {
+                const dados = localStorage.getItem('registrosFinanceiros');
+                if (dados) {
+                    registros = JSON.parse(dados);
+                    atualizarTabela();
+                    calcularTotais();
+                    atualizarGrafico();
+                } else {
+                    semRegistrosElement.style.display = 'block';
+                }
+            };
+            
+            // Salvar dados no localStorage
+            const salvarDados = () => {
+                localStorage.setItem('registrosFinanceiros', JSON.stringify(registros));
+            };
+            
+            // Calcular totais
+            const calcularTotais = () => {
+                saldoAtual = 0;
+                totalEntradas = 0;
+                totalSaidas = 0;
+                const hoje = new Date();
+                const mesAtual = hoje.getMonth();
+                const anoAtual = hoje.getFullYear();
+                let balancoMensal = 0;
+                
+                registros.forEach(registro => {
+                    if (registro.tipo === 'entrada') {
+                        saldoAtual += registro.valor;
+                        totalEntradas += registro.valor;
+                        
+                        // Calcular balanço mensal
+                        const dataRegistro = new Date(registro.data);
+                        if (dataRegistro.getMonth() === mesAtual && dataRegistro.getFullYear() === anoAtual) {
+                            balancoMensal += registro.valor;
+                        }
+                    } else {
+                        saldoAtual -= registro.valor;
+                        totalSaidas += registro.valor;
+                        
+                        // Calcular balanço mensal
+                        const dataRegistro = new Date(registro.data);
+                        if (dataRegistro.getMonth() === mesAtual && dataRegistro.getFullYear() === anoAtual) {
+                            balancoMensal -= registro.valor;
+                        }
+                    }
+                });
+                
+                // Atualizar elementos na tela
                 saldoElement.textContent = formatarMoeda(saldoAtual);
+                totalEntradasElement.textContent = formatarMoeda(totalEntradas);
+                totalSaidasElement.textContent = formatarMoeda(totalSaidas);
+                balancoMensalElement.textContent = formatarMoeda(balancoMensal);
+                
+                // Alterar cor do saldo se for negativo
                 if (saldoAtual >= 0) {
                     saldoElement.classList.remove('text-red-600');
-                    saldoElement.classList.add('text-purple-700');
+                    saldoElement.classList.add('text-indigo-700');
                 } else {
-                    saldoElement.classList.remove('text-purple-700');
+                    saldoElement.classList.remove('text-indigo-700');
                     saldoElement.classList.add('text-red-600');
                 }
             };
-
+            
+            // Atualizar tabela de registros
+            const atualizarTabela = () => {
+                // Limpar tabela
+                tabela.innerHTML = '';
+                
+                // Obter valores dos filtros
+                const tipoFiltro = filtroTipo.value;
+                const categoriaFiltro = filtroCategoria.value;
+                
+                // Filtrar registros
+                let registrosFiltrados = registros.filter(registro => {
+                    let passaFiltro = true;
+                    
+                    if (tipoFiltro !== 'todos' && registro.tipo !== tipoFiltro) {
+                        passaFiltro = false;
+                    }
+                    
+                    if (categoriaFiltro !== 'todos' && registro.categoria !== categoriaFiltro) {
+                        passaFiltro = false;
+                    }
+                    
+                    return passaFiltro;
+                });
+                
+                // Ordenar registros (por data)
+                registrosFiltrados.sort((a, b) => {
+                    const dataA = new Date(a.data);
+                    const dataB = new Date(b.data);
+                    
+                    return ordenacaoCrescente ? dataB - dataA : dataA - dataB;
+                });
+                
+                // Exibir ou ocultar mensagem de sem registros
+                if (registrosFiltrados.length === 0) {
+                    semRegistrosElement.style.display = 'block';
+                } else {
+                    semRegistrosElement.style.display = 'none';
+                    
+                    // Adicionar registros à tabela
+                    registrosFiltrados.forEach((registro, index) => {
+                        const newRow = document.createElement('tr');
+                        newRow.className = `fade-in ${registro.tipo === 'entrada' ? 'transaction-entrada' : 'transaction-saida'}`;
+                        
+                        // Formatar data para exibição
+                        const dataFormatada = new Date(registro.data).toLocaleDateString('pt-BR');
+                        
+                        newRow.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">${registro.descricao}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">${registro.categoria}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">${dataFormatada}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${registro.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}">
+                                ${formatarMoeda(registro.valor)}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${registro.tipo === 'entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} capitalize">
+                                    ${registro.tipo}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-red-500 hover:text-red-700 delete-btn" data-index="${index}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tabela.appendChild(newRow);
+                    });
+                    
+                    // Adicionar event listeners aos botões de deletar
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const index = parseInt(e.currentTarget.getAttribute('data-index'));
+                            deletarRegistro(index);
+                        });
+                    });
+                }
+            };
+            
+            // Atualizar gráfico
+            const atualizarGrafico = () => {
+                const ctx = document.getElementById('finance-chart').getContext('2d');
+                
+                // Destruir gráfico anterior se existir
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                // Preparar dados para o gráfico
+                const ultimos6Meses = [];
+                const entradasPorMes = [0, 0, 0, 0, 0, 0];
+                const saidasPorMes = [0, 0, 0, 0, 0, 0];
+                
+                // Gerar labels dos últimos 6 meses
+                const hoje = new Date();
+                for (let i = 5; i >= 0; i--) {
+                    const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+                    ultimos6Meses.push(mes.toLocaleString('pt-BR', { month: 'short' }));
+                }
+                
+                // Calcular totais por mês
+                registros.forEach(registro => {
+                    const dataRegistro = new Date(registro.data);
+                    const diffMeses = (hoje.getFullYear() - dataRegistro.getFullYear()) * 12 + (hoje.getMonth() - dataRegistro.getMonth());
+                    
+                    if (diffMeses < 6 && diffMeses >= 0) {
+                        const index = 5 - diffMeses;
+                        
+                        if (registro.tipo === 'entrada') {
+                            entradasPorMes[index] += registro.valor;
+                        } else {
+                            saidasPorMes[index] += registro.valor;
+                        }
+                    }
+                });
+                
+                // Criar gráfico
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ultimos6Meses,
+                        datasets: [
+                            {
+                                label: 'Entradas',
+                                data: entradasPorMes,
+                                backgroundColor: '#10b981',
+                                borderColor: '#10b981',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Saídas',
+                                data: saidasPorMes,
+                                backgroundColor: '#ef4444',
+                                borderColor: '#ef4444',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+            };
+            
+            // Adicionar novo registro
             const adicionarRegistro = (event) => {
                 event.preventDefault();
-
+                
                 const descricao = document.getElementById('descricao').value;
                 const valor = parseFloat(document.getElementById('valor').value);
                 const tipo = document.getElementById('tipo').value;
-
-                if (tipo === 'entrada') {
-                    saldoAtual += valor;
-                } else {
-                    saldoAtual -= valor;
+                const categoria = document.getElementById('categoria').value;
+                const data = document.getElementById('data').value;
+                
+                // Validar valor
+                if (isNaN(valor) || valor <= 0) {
+                    alert('Por favor, insira um valor válido maior que zero.');
+                    return;
                 }
-
-                // Adiciona linha à tabela
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${descricao}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm ${tipo === 'entrada' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}">${formatarMoeda(valor)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">${tipo}</td>
-                `;
-                tabela.appendChild(newRow);
-
-                atualizarSaldo();
+                
+                // Criar objeto de registro
+                const novoRegistro = {
+                    id: Date.now(), // ID único baseado no timestamp
+                    descricao,
+                    valor,
+                    tipo,
+                    categoria,
+                    data
+                };
+                
+                // Adicionar ao array de registros
+                registros.push(novoRegistro);
+                
+                // Atualizar a interface
+                calcularTotais();
+                atualizarTabela();
+                atualizarGrafico();
+                salvarDados();
+                
+                // Resetar o formulário
                 form.reset();
+                document.getElementById('data').valueAsDate = new Date();
+                
+                // Mostrar feedback visual
+                const btnSubmit = form.querySelector('button[type="submit"]');
+                const originalText = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = '<i class="fas fa-check mr-2"></i>Registro Adicionado!';
+                btnSubmit.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btnSubmit.innerHTML = originalText;
+                    btnSubmit.classList.remove('btn-success');
+                    btnSubmit.classList.add('btn-primary');
+                }, 2000);
             };
-
-            form.addEventListener('submit', adicionarRegistro);
+            
+            // Deletar registro
+            const deletarRegistro = (index) => {
+                if (confirm('Tem certeza que deseja excluir este registro?')) {
+                    registros.splice(index, 1);
+                    calcularTotais();
+                    atualizarTabela();
+                    atualizarGrafico();
+                    salvarDados();
+                }
+            };
+            
+            // Inicializar aplicação
+            const init = () => {
+                carregarDados();
+                
+                // Event Listeners
+                form.addEventListener('submit', adicionarRegistro);
+                filtroTipo.addEventListener('change', atualizarTabela);
+                filtroCategoria.addEventListener('change', atualizarTabela);
+                
+                btnOrdenar.addEventListener('click', () => {
+                    ordenacaoCrescente = !ordenacaoCrescente;
+                    btnOrdenar.innerHTML = ordenacaoCrescente ? 
+                        '<i class="fas fa-sort-amount-down-alt text-gray-700"></i>' : 
+                        '<i class="fas fa-sort-amount-up-alt text-gray-700"></i>';
+                    atualizarTabela();
+                });
+            };
+            
+            // Iniciar a aplicação
+            init();
         });
     </script>
 </body>
 </html>
-
